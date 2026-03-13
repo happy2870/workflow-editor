@@ -9,9 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@remixicon/react": "^4.9.0",
+    "@types/dagre": "^0.7.54",
+    "@types/uuid": "^10.0.0",
+    "@xyflow/react": "^12.10.1",
+    "dagre": "^0.8.5",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

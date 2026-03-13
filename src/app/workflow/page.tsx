@@ -1,0 +1,12 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const WorkflowEditor = dynamic(
+  () => import('@/components/workflow/WorkflowEditor'),
+  { ssr: false }
+);
+
+export default function WorkflowPage() {
+  return <WorkflowEditor />;
+}
