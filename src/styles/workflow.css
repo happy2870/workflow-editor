@@ -43,20 +43,10 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  overflow: visible !important;
 }
 
-/* Force handles to exact node border despite padding */
-.react-flow__handle.react-flow__handle-left {
-  left: 0 !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-.react-flow__handle.react-flow__handle-right {
-  right: 0 !important;
-  left: auto !important;
-  top: 50% !important;
-  transform: translate(50%, -50%) !important;
-}
+/* Handle horizontal position set via inline style in NodeHandle.tsx */
 
 /* Handle visibility on hover */
 .node-item-add { opacity: 0; transition: opacity 0.2s; }

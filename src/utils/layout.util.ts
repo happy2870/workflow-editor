@@ -1,5 +1,5 @@
 import dagre from 'dagre';
-import { NODE_WIDTH, NODE_HEIGHT } from '@/constants/workflow.constants';
+import { NODE_WIDTH, NODE_HEIGHT } from '@/constants/Workflowconstants';
 import type { WorkflowNode, WorkflowEdge } from '@/types/workflow.types';
 
 export function getLayoutedElements(

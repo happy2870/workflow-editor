@@ -1,142 +1,68 @@
 'use client';
 
-import React, { useCallback, useRef, useState, useMemo } from 'react';
-import {
-  ReactFlow,
-  Background,
-  MiniMap,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  type Connection,
-  type NodeTypes,
-  type EdgeTypes,
-  ReactFlowProvider,
-  useReactFlow,
-} from '@xyflow/react';
+import { NODE_REGISTRY, getInitialGraph } from '@/constants/Workflowconstants';
+import { useClipboard } from '@/hooks/useClipboard';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useNodeContextMenu } from '@/hooks/useNodeContextMenu';
+import { CUSTOM_NOTE_NODE, useWorkflowEvents } from '@/hooks/useWorkflowEvents';
 import { useWorkflowStore } from '@/store/workflow.store';
-import { BlockEnum, type CommonNodeType, type WorkflowNode, type WorkflowEdge } from '@/types/workflow.types';
-import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/workflow.constants';
-import { generateNodeId } from '@/utils/layout.util';
-import CustomNode from './nodes/_base/CustomNode';
-import CustomEdge from './nodes/_base/CustomEdge';
-import ConfigPanel from './panels/ConfigPanel';
+import { type CommonNodeType } from '@/types/workflow.types';
+import {
+  Background,
+  BackgroundVariant,
+  MiniMap,
+  ReactFlow,
+  ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
+  type EdgeTypes,
+  type NodeTypes,
+} from '@xyflow/react';
+import { useMemo, useRef } from 'react';
+import NodeContextMenu from './node-context-menu/NodeContextMenu';
 import NodeSelector from './node-selector/NodeSelector';
+import CandidateNode from './nodes/_base/CandidateNode';
+import CustomEdge from './nodes/_base/CustomEdge';
+import CustomNode from './nodes/_base/CustomNode';
+import CustomNoteNode from './nodes/_base/CustomNoteNode';
+import ConfigPanel from './panels/ConfigPanel';
 import WorkflowControls from './WorkflowControls';
-import { useHistory } from '@/hooks/useHistory';
+
+export { CUSTOM_NOTE_NODE };
 
 const nodeTypes: NodeTypes = {
   custom: CustomNode,
+  [CUSTOM_NOTE_NODE]: CustomNoteNode,
 };
 
 const edgeTypes: EdgeTypes = {
   custom: CustomEdge,
 };
 
-// Initial graph with a Start node
-function getInitialGraph() {
-  const startNode: WorkflowNode = {
-    id: 'start-1',
-    type: 'custom',
-    position: { x: 100, y: 300 },
-    data: {
-      type: BlockEnum.Start,
-      title: 'Start',
-      desc: '',
-      ...getDefaultNodeData(BlockEnum.Start),
-    } as CommonNodeType,
-  };
-  return { nodes: [startNode], edges: [] as WorkflowEdge[] };
-}
 
 function WorkflowEditorInner() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
   const initial = useMemo(() => getInitialGraph(), []);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initial.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
-  const [showNodeSelector, setShowNodeSelector] = useState(false);
-  const [selectorPosition, setSelectorPosition] = useState({ x: 0, y: 0 });
+  const [nodes, , onNodesChange] = useNodesState(initial.nodes);
+  const [edges, , onEdgesChange] = useEdgesState(initial.edges);
 
-  const deselectNode = useWorkflowStore((s) => s.deselectNode);
   const controlMode = useWorkflowStore((s) => s.controlMode);
-  const { addToHistory, undo, redo } = useHistory();
 
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      addToHistory();
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            type: 'custom',
-            data: { sourceType: BlockEnum.Start, targetType: BlockEnum.End },
-          },
-          eds
-        )
-      );
-    },
-    [setEdges, addToHistory]
-  );
-
-  const onPaneClick = useCallback(() => {
-    deselectNode();
-    setShowNodeSelector(false);
-  }, [deselectNode]);
-
-  const onPaneContextMenu = useCallback(
-    (event: MouseEvent | React.MouseEvent) => {
-      event.preventDefault();
-      setSelectorPosition({ x: event.clientX, y: event.clientY });
-      setShowNodeSelector(true);
-    },
-    []
-  );
-
-  const addNode = useCallback(
-    (type: BlockEnum) => {
-      addToHistory();
-      const position = screenToFlowPosition(selectorPosition);
-      const nodeInfo = NODE_REGISTRY[type];
-      const newNode: WorkflowNode = {
-        id: generateNodeId(),
-        type: 'custom',
-        position,
-        data: {
-          type,
-          title: nodeInfo?.title || type,
-          desc: '',
-          ...getDefaultNodeData(type),
-        } as CommonNodeType,
-      };
-      setNodes((nds) => [...nds, newNode]);
-      setShowNodeSelector(false);
-    },
-    [screenToFlowPosition, selectorPosition, setNodes, addToHistory]
-  );
-
-  const onNodesDelete = useCallback(() => {
-    addToHistory();
-  }, [addToHistory]);
-
-  const onEdgesDelete = useCallback(() => {
-    addToHistory();
-  }, [addToHistory]);
-
-  // Keyboard shortcuts
-  const onKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-        event.preventDefault();
-        if (event.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-      }
-    },
-    [undo, redo]
-  );
+  const { copy, duplicate, deleteSelected } = useClipboard();
+  const { onKeyDown } = useKeyboardShortcuts();
+  const { contextMenu, onNodeContextMenu, closeContextMenu } = useNodeContextMenu();
+  const {
+    showNodeSelector,
+    setShowNodeSelector,
+    selectorPosition,
+    onConnect,
+    onPaneClick,
+    onPaneContextMenu,
+    addNode,
+    addNoteNode,
+    onNodesDelete,
+    onEdgesDelete,
+  } = useWorkflowEvents();
 
   return (
     <div className="flex h-full" onKeyDown={onKeyDown} tabIndex={0}>
@@ -147,8 +73,9 @@ function WorkflowEditorInner() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onPaneClick={onPaneClick}
-          onPaneContextMenu={onPaneContextMenu}
+          onPaneClick={() => onPaneClick(closeContextMenu)}
+          onPaneContextMenu={(e) => onPaneContextMenu(e, closeContextMenu)}
+          onNodeContextMenu={onNodeContextMenu}
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           nodeTypes={nodeTypes}
@@ -160,7 +87,7 @@ function WorkflowEditorInner() {
           proOptions={{ hideAttribution: true }}
           deleteKeyCode={['Backspace', 'Delete']}
         >
-          <Background color="#d1d5db" gap={20} size={2} variant={"dots" as any} />
+          <Background color="#d1d5db" gap={20} size={2} variant={BackgroundVariant.Dots} />
           <MiniMap
             nodeColor={(node) => {
               const data = node.data as CommonNodeType;
@@ -172,8 +99,9 @@ function WorkflowEditorInner() {
           />
         </ReactFlow>
         <WorkflowControls />
+        <CandidateNode />
 
-        {/* Node selector context menu */}
+        {/* Node selector - pane context menu */}
         {showNodeSelector && (
           <div
             className="absolute z-50"
@@ -181,13 +109,28 @@ function WorkflowEditorInner() {
           >
             <NodeSelector
               onSelect={addNode}
+              onSelectNote={addNoteNode}
               onClose={() => setShowNodeSelector(false)}
             />
           </div>
         )}
+
+        {/* Node context menu - right click on node */}
+        {contextMenu && (
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={closeContextMenu} onContextMenu={(e) => { e.preventDefault(); closeContextMenu(); }} />
+            <div className="fixed z-[9999]" style={{ left: contextMenu.x, top: contextMenu.y }}>
+              <NodeContextMenu
+                onCopy={copy}
+                onDuplicate={duplicate}
+                onDelete={deleteSelected}
+                onClose={closeContextMenu}
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Config panel */}
       <ConfigPanel />
     </div>
   );

@@ -24,9 +24,13 @@ interface WorkflowState {
   workflowReadOnly: boolean;
   controlMode: 'pointer' | 'hand';
 
+  // Candidate node (mouse-following preview)
+  candidateNode: WorkflowNode | null;
+  mousePosition: { pageX: number; pageY: number };
+
   // History (undo/redo)
-  graphHistory: GraphSnapshot[];
-  currentHistoryIndex: number;
+  historyPast: GraphSnapshot[];
+  historyFuture: GraphSnapshot[];
 
   // Actions - Graph
   setNodes: (nodes: WorkflowNode[]) => void;
@@ -42,14 +46,16 @@ interface WorkflowState {
   setNodeSelectorOpen: (open: boolean) => void;
   setWorkflowReadOnly: (readOnly: boolean) => void;
   setControlMode: (mode: 'pointer' | 'hand') => void;
+  setCandidateNode: (node: WorkflowNode | null) => void;
+  setMousePosition: (pos: { pageX: number; pageY: number }) => void;
 
   // Actions - Node data
   updateNodeData: (nodeId: string, data: Partial<CommonNodeType>) => void;
 
   // Actions - History
   addToHistory: (nodes: WorkflowNode[], edges: WorkflowEdge[]) => void;
-  undo: () => GraphSnapshot | null;
-  redo: () => GraphSnapshot | null;
+  undo: (currentNodes: WorkflowNode[], currentEdges: WorkflowEdge[]) => GraphSnapshot | null;
+  redo: (currentNodes: WorkflowNode[], currentEdges: WorkflowEdge[]) => GraphSnapshot | null;
   canUndo: () => boolean;
   canRedo: () => boolean;
 }
@@ -68,8 +74,10 @@ export const useWorkflowStore = create<WorkflowState>()(
       nodeSelectorOpen: false,
       workflowReadOnly: false,
       controlMode: 'pointer' as const,
-      graphHistory: [],
-      currentHistoryIndex: -1,
+      candidateNode: null,
+      mousePosition: { pageX: 0, pageY: 0 },
+      historyPast: [],
+      historyFuture: [],
 
       setNodes: (nodes) => set({ nodes }),
       setEdges: (edges) => set({ edges }),
@@ -84,6 +92,8 @@ export const useWorkflowStore = create<WorkflowState>()(
       setNodeSelectorOpen: (open) => set({ nodeSelectorOpen: open }),
       setWorkflowReadOnly: (readOnly) => set({ workflowReadOnly: readOnly }),
       setControlMode: (mode) => set({ controlMode: mode }),
+      setCandidateNode: (node) => set({ candidateNode: node }),
+      setMousePosition: (pos) => set({ mousePosition: pos }),
 
       updateNodeData: (nodeId, data) => {
         const { nodes, selectedNodeId, selectedNode } = get();
@@ -99,38 +109,45 @@ export const useWorkflowStore = create<WorkflowState>()(
       },
 
       addToHistory: (nodes, edges) => {
-        const { graphHistory, currentHistoryIndex } = get();
-        const newHistory = graphHistory.slice(0, currentHistoryIndex + 1);
-        newHistory.push({
+        const { historyPast } = get();
+        const newPast = [...historyPast, {
           nodes: JSON.parse(JSON.stringify(nodes)),
           edges: JSON.parse(JSON.stringify(edges)),
+        }];
+        if (newPast.length > MAX_HISTORY) newPast.shift();
+        set({ historyPast: newPast, historyFuture: [] });
+      },
+
+      undo: (currentNodes, currentEdges) => {
+        const { historyPast, historyFuture } = get();
+        if (historyPast.length === 0) return null;
+        const prev = historyPast[historyPast.length - 1];
+        set({
+          historyPast: historyPast.slice(0, -1),
+          historyFuture: [{
+            nodes: JSON.parse(JSON.stringify(currentNodes)),
+            edges: JSON.parse(JSON.stringify(currentEdges)),
+          }, ...historyFuture],
         });
-        if (newHistory.length > MAX_HISTORY) newHistory.shift();
-        set({ graphHistory: newHistory, currentHistoryIndex: newHistory.length - 1 });
+        return prev;
       },
 
-      undo: () => {
-        const { currentHistoryIndex, graphHistory } = get();
-        if (currentHistoryIndex > 0) {
-          const prev = graphHistory[currentHistoryIndex - 1];
-          set({ currentHistoryIndex: currentHistoryIndex - 1 });
-          return prev;
-        }
-        return null;
+      redo: (currentNodes, currentEdges) => {
+        const { historyPast, historyFuture } = get();
+        if (historyFuture.length === 0) return null;
+        const next = historyFuture[0];
+        set({
+          historyPast: [...historyPast, {
+            nodes: JSON.parse(JSON.stringify(currentNodes)),
+            edges: JSON.parse(JSON.stringify(currentEdges)),
+          }],
+          historyFuture: historyFuture.slice(1),
+        });
+        return next;
       },
 
-      redo: () => {
-        const { currentHistoryIndex, graphHistory } = get();
-        if (currentHistoryIndex < graphHistory.length - 1) {
-          const next = graphHistory[currentHistoryIndex + 1];
-          set({ currentHistoryIndex: currentHistoryIndex + 1 });
-          return next;
-        }
-        return null;
-      },
-
-      canUndo: () => get().currentHistoryIndex > 0,
-      canRedo: () => get().currentHistoryIndex < get().graphHistory.length - 1,
+      canUndo: () => get().historyPast.length > 0,
+      canRedo: () => get().historyFuture.length > 0,
     }),
     { name: 'workflow-store' }
   )

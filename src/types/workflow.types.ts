@@ -215,3 +215,20 @@ export type VariableAggregatorNodeData = {
   variables: string[][];
   output_type: 'string' | 'number' | 'object' | 'array';
 };
+
+// ===== Note Node =====
+export enum NoteTheme {
+  Blue = 'blue',
+  Cyan = 'cyan',
+  Green = 'green',
+  Yellow = 'yellow',
+  Pink = 'pink',
+  Violet = 'violet',
+}
+
+export type NoteNodeData = {
+  text: string;
+  theme: NoteTheme;
+  showAuthor?: boolean;
+  author?: string;
+};

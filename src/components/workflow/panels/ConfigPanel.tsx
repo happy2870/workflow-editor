@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useWorkflowStore } from '@/store/workflow.store';
-import { NODE_REGISTRY } from '@/constants/workflow.constants';
+import { NODE_REGISTRY } from '@/constants/Workflowconstants';
 import type { CommonNodeType } from '@/types/workflow.types';
 
 export default function ConfigPanel() {

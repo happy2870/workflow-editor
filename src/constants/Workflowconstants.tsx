@@ -12,7 +12,7 @@ import {
   RiChat3Line,
   RiToolsLine,
 } from '@remixicon/react';
-import { BlockEnum, type NodeExtraData } from '@/types/workflow.types';
+import { BlockEnum, WorkflowEdge, type NodeExtraData } from '@/types/workflow.types';
 
 export const ALL_BLOCK_TYPES = Object.values(BlockEnum).filter(
   (v) => v !== BlockEnum.IterationStart
@@ -138,7 +138,22 @@ export const NODE_REGISTRY: Record<BlockEnum, NodeExtraData> = {
 export const NODE_WIDTH = 240;
 export const NODE_HEIGHT = 80;
 
-export function getDefaultNodeData(type: BlockEnum): Record<string, any> {
+export function getInitialGraph() {
+  const startNode = {
+    id: 'start-1',
+    type: 'custom' as const,
+    position: { x: 100, y: 300 },
+    data: {
+      type: BlockEnum.Start,
+      title: 'Start',
+      desc: '',
+      ...getDefaultNodeData(BlockEnum.Start),
+    },
+  };
+  return { nodes: [startNode], edges: [] as WorkflowEdge[] };
+}
+
+export function getDefaultNodeData(type: BlockEnum): Record<string, unknown> {
   switch (type) {
     case BlockEnum.Start:
       return { variables: [] };
