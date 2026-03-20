@@ -90,6 +90,7 @@ export function useWorkflowEvents() {
       id: generateNodeId(),
       type: CUSTOM_NOTE_NODE,
       position: { x: 0, y: 0 },
+      style: { width: 240, height: 100 },
       data: {
         type: BlockEnum.Start,
         title: 'Note',
