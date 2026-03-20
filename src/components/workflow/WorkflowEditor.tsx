@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useRef, useState, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -20,6 +20,7 @@ import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/workflow.constant
 import { generateNodeId } from '@/utils/layout.util';
 import CustomNode from './nodes/_base/CustomNode';
 import CustomEdge from './nodes/_base/CustomEdge';
+import CandidateNode from './nodes/_base/CandidateNode';
 import ConfigPanel from './panels/ConfigPanel';
 import NodeSelector from './node-selector/NodeSelector';
 import WorkflowControls from './WorkflowControls';
@@ -60,7 +61,19 @@ function WorkflowEditorInner() {
 
   const deselectNode = useWorkflowStore((s) => s.deselectNode);
   const controlMode = useWorkflowStore((s) => s.controlMode);
+  const setCandidateNode = useWorkflowStore((s) => s.setCandidateNode);
+  const setMousePosition = useWorkflowStore((s) => s.setMousePosition);
+  const candidateNode = useWorkflowStore((s) => s.candidateNode);
   const { addToHistory, undo, redo } = useHistory();
+
+  // Track mouse position for candidate node
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ pageX: e.pageX, pageY: e.pageY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [setMousePosition]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -95,24 +108,23 @@ function WorkflowEditorInner() {
 
   const addNode = useCallback(
     (type: BlockEnum) => {
-      addToHistory();
-      const position = screenToFlowPosition(selectorPosition);
       const nodeInfo = NODE_REGISTRY[type];
       const newNode: WorkflowNode = {
         id: generateNodeId(),
         type: 'custom',
-        position,
+        position: { x: 0, y: 0 },
         data: {
           type,
           title: nodeInfo?.title || type,
           desc: '',
+          _isCandidate: true,
           ...getDefaultNodeData(type),
         } as CommonNodeType,
       };
-      setNodes((nds) => [...nds, newNode]);
+      setCandidateNode(newNode);
       setShowNodeSelector(false);
     },
-    [screenToFlowPosition, selectorPosition, setNodes, addToHistory]
+    [setCandidateNode]
   );
 
   const onNodesDelete = useCallback(() => {
@@ -172,6 +184,7 @@ function WorkflowEditorInner() {
           />
         </ReactFlow>
         <WorkflowControls />
+        <CandidateNode />
 
         {/* Node selector context menu */}
         {showNodeSelector && (

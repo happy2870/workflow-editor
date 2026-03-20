@@ -77,24 +77,29 @@ export const NodeTargetHandle = ({ id, data, handleId }: NodeHandleProps) => {
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        className={`!w-5 !h-5 !border-0 !min-w-0 !min-h-0 node-item-add ${
-          connected
-            ? '!bg-transparent'
-            : '!bg-blue-500 hover:!bg-blue-600 !rounded-full !cursor-pointer'
-        }`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onClick={handleClick}
+        className="!w-0 !h-0 !border-0 !min-w-0 !min-h-0 !bg-transparent !overflow-visible"
+        style={{ left: 0, top: '50%', transform: 'translateY(-50%)' }}
       >
         {!connected && (
-          <RiAddLine size={14} className="text-white pointer-events-none" />
+          <div
+            className="absolute w-5 h-5 bg-blue-500 hover:bg-blue-600 rounded-full cursor-pointer flex items-center justify-center node-item-add"
+            style={{ left: -10, top: -10 }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onClick={handleClick}
+          >
+            <RiAddLine size={14} className="text-white pointer-events-none" />
+          </div>
         )}
       </Handle>
       {selectorOpen && !connected && typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed z-[9999]" style={{ left: popupPos.x, top: popupPos.y, transform: 'translate(-100%, -50%)' }}>
-            <NodeSelector availableNodes={nodeInfo?.availablePrevNodes} onSelect={onSelectNode} onClose={() => setSelectorOpen(false)} />
-          </div>,
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setSelectorOpen(false)} />
+            <div className="fixed z-[9999]" style={{ left: popupPos.x, top: popupPos.y, transform: 'translate(-100%, -50%)' }}>
+              <NodeSelector availableNodes={nodeInfo?.availablePrevNodes} onSelect={onSelectNode} onClose={() => setSelectorOpen(false)} />
+            </div>
+          </>,
           document.body
         )
       }
@@ -160,18 +165,27 @@ export const NodeSourceHandle = ({ id, data, handleId }: NodeHandleProps) => {
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        className="!w-5 !h-5 !border-0 !min-w-0 !min-h-0 !bg-blue-500 hover:!bg-blue-600 !rounded-full !cursor-pointer node-item-add"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onClick={handleClick}
+        className="!w-0 !h-0 !border-0 !min-w-0 !min-h-0 !bg-transparent !overflow-visible"
+        style={{ right: 0, left: 'auto', top: '50%', transform: 'translateY(-50%)' }}
       >
-        <RiAddLine size={14} className="text-white pointer-events-none" />
+        <div
+          className="absolute w-5 h-5 bg-blue-500 hover:bg-blue-600 rounded-full cursor-pointer flex items-center justify-center node-item-add"
+          style={{ left: -10, top: -10 }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onClick={handleClick}
+        >
+          <RiAddLine size={14} className="text-white pointer-events-none" />
+        </div>
       </Handle>
       {selectorOpen && typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed z-[9999]" style={{ left: popupPos.x, top: popupPos.y, transform: 'translateY(-50%)' }}>
-            <NodeSelector availableNodes={nodeInfo?.availableNextNodes} onSelect={onSelectNode} onClose={() => setSelectorOpen(false)} />
-          </div>,
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setSelectorOpen(false)} />
+            <div className="fixed z-[9999]" style={{ left: popupPos.x, top: popupPos.y, transform: 'translateY(-50%)' }}>
+              <NodeSelector availableNodes={nodeInfo?.availableNextNodes} onSelect={onSelectNode} onClose={() => setSelectorOpen(false)} />
+            </div>
+          </>,
           document.body
         )
       }

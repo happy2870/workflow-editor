@@ -18,20 +18,24 @@ export function useHistory() {
   }, [getNodes, getEdges, addToHistoryStore]);
 
   const undo = useCallback(() => {
-    const snapshot = undoStore();
+    const nodes = getNodes() as WorkflowNode[];
+    const edges = getEdges() as WorkflowEdge[];
+    const snapshot = undoStore(nodes, edges);
     if (snapshot) {
       setNodes(snapshot.nodes);
       setEdges(snapshot.edges);
     }
-  }, [undoStore, setNodes, setEdges]);
+  }, [getNodes, getEdges, undoStore, setNodes, setEdges]);
 
   const redo = useCallback(() => {
-    const snapshot = redoStore();
+    const nodes = getNodes() as WorkflowNode[];
+    const edges = getEdges() as WorkflowEdge[];
+    const snapshot = redoStore(nodes, edges);
     if (snapshot) {
       setNodes(snapshot.nodes);
       setEdges(snapshot.edges);
     }
-  }, [redoStore, setNodes, setEdges]);
+  }, [getNodes, getEdges, redoStore, setNodes, setEdges]);
 
   return { addToHistory, undo, redo, canUndo, canRedo };
 }
