@@ -5,6 +5,8 @@ import { useReactFlow, type NodeProps } from '@xyflow/react';
 import { useWorkflowStore } from '@/store/workflow.store';
 import { useHistory } from '@/hooks/useHistory';
 import CustomNode from './CustomNode';
+import CustomNoteNode from './CustomNoteNode';
+import { CUSTOM_NOTE_NODE } from '../../WorkflowEditor';
 import type { WorkflowNode } from '@/types/workflow.types';
 
 const CandidateNode = () => {
@@ -73,7 +75,10 @@ const CandidateNode = () => {
         transformOrigin: '0 0',
       }}
     >
-      <CustomNode {...(candidateNode as unknown as NodeProps)} />
+      {candidateNode.type === CUSTOM_NOTE_NODE
+        ? <CustomNoteNode {...(candidateNode as unknown as NodeProps)} />
+        : <CustomNode {...(candidateNode as unknown as NodeProps)} />
+      }
     </div>
   );
 };

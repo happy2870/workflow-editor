@@ -15,10 +15,11 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { useWorkflowStore } from '@/store/workflow.store';
-import { BlockEnum, type CommonNodeType, type WorkflowNode, type WorkflowEdge } from '@/types/workflow.types';
+import { BlockEnum, NoteTheme, type CommonNodeType, type WorkflowNode, type WorkflowEdge } from '@/types/workflow.types';
 import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/workflow.constants';
 import { generateNodeId } from '@/utils/layout.util';
 import CustomNode from './nodes/_base/CustomNode';
+import CustomNoteNode from './nodes/_base/CustomNoteNode';
 import CustomEdge from './nodes/_base/CustomEdge';
 import CandidateNode from './nodes/_base/CandidateNode';
 import ConfigPanel from './panels/ConfigPanel';
@@ -26,8 +27,11 @@ import NodeSelector from './node-selector/NodeSelector';
 import WorkflowControls from './WorkflowControls';
 import { useHistory } from '@/hooks/useHistory';
 
+export const CUSTOM_NOTE_NODE = 'custom-note';
+
 const nodeTypes: NodeTypes = {
   custom: CustomNode,
+  [CUSTOM_NOTE_NODE]: CustomNoteNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -127,6 +131,24 @@ function WorkflowEditorInner() {
     [setCandidateNode]
   );
 
+  const addNoteNode = useCallback(() => {
+    const newNode: WorkflowNode = {
+      id: generateNodeId(),
+      type: CUSTOM_NOTE_NODE,
+      position: { x: 0, y: 0 },
+      data: {
+        type: BlockEnum.Start, // placeholder, not used for note
+        title: 'Note',
+        desc: '',
+        text: '',
+        theme: NoteTheme.Yellow,
+        _isCandidate: true,
+      } as CommonNodeType,
+    };
+    setCandidateNode(newNode);
+    setShowNodeSelector(false);
+  }, [setCandidateNode]);
+
   const onNodesDelete = useCallback(() => {
     addToHistory();
   }, [addToHistory]);
@@ -194,6 +216,7 @@ function WorkflowEditorInner() {
           >
             <NodeSelector
               onSelect={addNode}
+              onSelectNote={addNoteNode}
               onClose={() => setShowNodeSelector(false)}
             />
           </div>
