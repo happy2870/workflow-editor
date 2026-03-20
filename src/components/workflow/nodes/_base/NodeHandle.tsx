@@ -5,7 +5,7 @@ import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { RiAddLine } from '@remixicon/react';
 import { createPortal } from 'react-dom';
 import type { CommonNodeType, BlockEnum, WorkflowNode } from '@/types/workflow.types';
-import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/workflow.constants';
+import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/Workflowconstants';
 import { useWorkflowStore } from '@/store/workflow.store';
 import { useHistory } from '@/hooks/useHistory';
 import { generateNodeId } from '@/utils/layout.util';

@@ -3,7 +3,7 @@
 import React from 'react';
 import { RiStickyNoteLine } from '@remixicon/react';
 import { BlockEnum } from '@/types/workflow.types';
-import { NODE_REGISTRY, ALL_BLOCK_TYPES } from '@/constants/workflow.constants';
+import { NODE_REGISTRY, ALL_BLOCK_TYPES } from '@/constants/Workflowconstants';
 
 type NodeSelectorProps = {
   availableNodes?: BlockEnum[];

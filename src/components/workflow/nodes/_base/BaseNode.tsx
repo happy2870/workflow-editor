@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { CommonNodeType } from '@/types/workflow.types';
-import { NODE_REGISTRY } from '@/constants/workflow.constants';
+import { NODE_REGISTRY } from '@/constants/Workflowconstants';
 
 type BaseNodeProps = {
   id: string;

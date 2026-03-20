@@ -2,10 +2,9 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeResizeControl } from '@xyflow/react';
+import { NodeResizeControl, useReactFlow } from '@xyflow/react';
 import { RiDraggable } from '@remixicon/react';
 import { NoteTheme, type NoteNodeData, type CommonNodeType } from '@/types/workflow.types';
-import { useWorkflowStore } from '@/store/workflow.store';
 
 const THEME_MAP: Record<NoteTheme, { bg: string; border: string; title: string }> = {
   [NoteTheme.Blue]:   { bg: '#EFF8FF', border: '#84CAFF', title: '#2E90FA' },
@@ -21,20 +20,20 @@ const THEMES = Object.values(NoteTheme);
 export default function CustomNoteNode({ id, data, selected }: NodeProps) {
   const noteData = data as CommonNodeType<NoteNodeData>;
   const theme = THEME_MAP[noteData.theme] || THEME_MAP[NoteTheme.Yellow];
-  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+  const { updateNodeData } = useReactFlow();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [editing, setEditing] = useState(false);
 
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      updateNodeData(id, { text: e.target.value } as Partial<CommonNodeType>);
+      updateNodeData(id, { text: e.target.value });
     },
     [id, updateNodeData]
   );
 
   const handleThemeChange = useCallback(
     (t: NoteTheme) => {
-      updateNodeData(id, { theme: t } as Partial<CommonNodeType>);
+      updateNodeData(id, { theme: t });
     },
     [id, updateNodeData]
   );
@@ -47,18 +46,8 @@ export default function CustomNoteNode({ id, data, selected }: NodeProps) {
 
   return (
     <>
-      <NodeResizeControl
-        minWidth={200}
-        maxWidth={600}
-        minHeight={80}
-        style={{ background: 'transparent', border: 'none' }}
-        position="bottom-right"
-      >
-        <RiDraggable size={12} className="text-gray-400" style={{ transform: 'rotate(-45deg)' }} />
-      </NodeResizeControl>
-
       <div
-        className="rounded-md p-3 h-full"
+        className="rounded-md p-3 h-full relative"
         style={{
           backgroundColor: theme.bg,
           border: `1.5px solid ${selected ? theme.title : theme.border}`,
@@ -89,11 +78,12 @@ export default function CustomNoteNode({ id, data, selected }: NodeProps) {
         {editing && selected ? (
           <textarea
             ref={textareaRef}
-            className="w-full h-full bg-transparent border-none outline-none resize-none text-sm text-gray-700"
+            className="w-full h-full bg-transparent border-none outline-none resize-none text-sm text-gray-700 nowheel nopan"
             style={{ minHeight: 40 }}
             value={noteData.text || ''}
             onChange={handleTextChange}
             onBlur={() => setEditing(false)}
+            onKeyDown={(e) => e.stopPropagation()}
             placeholder="메모를 입력하세요..."
           />
         ) : (
@@ -103,6 +93,19 @@ export default function CustomNoteNode({ id, data, selected }: NodeProps) {
             )}
           </div>
         )}
+
+        {/* Resize handle inside the node */}
+        <NodeResizeControl
+          minWidth={200}
+          maxWidth={600}
+          minHeight={80}
+          style={{ background: 'transparent', border: 'none' }}
+          position="bottom-right"
+        >
+          <div className="absolute bottom-1 right-1">
+            <RiDraggable size={12} className="text-gray-400" style={{ transform: 'rotate(-45deg)' }} />
+          </div>
+        </NodeResizeControl>
       </div>
     </>
   );

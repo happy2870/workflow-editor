@@ -11,7 +11,7 @@ import {
 } from '@xyflow/react';
 import { RiAddLine, RiCloseLine } from '@remixicon/react';
 import type { CommonEdgeType, NodeRunningStatus, BlockEnum, CommonNodeType, WorkflowNode } from '@/types/workflow.types';
-import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/workflow.constants';
+import { NODE_REGISTRY, getDefaultNodeData } from '@/constants/Workflowconstants';
 import { useHistory } from '@/hooks/useHistory';
 import { generateNodeId } from '@/utils/layout.util';
 import NodeSelector from '../../node-selector/NodeSelector';
